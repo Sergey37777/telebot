@@ -4,11 +4,16 @@ import logging
 import sys
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+
+from database.orm_queries import get_admins
 from handlers.admin_private import admin_router
 from handlers.user_group import group_router
 from handlers.user_private import user_router
 from common.bot_commands import private
 from config import token
+from database.engine import async_session as session_maker
+from middlewares.db import DatabaseMiddleware
+
 dp = Dispatcher()
 dp.include_router(admin_router)
 dp.include_router(group_router)
@@ -17,10 +22,11 @@ dp.include_router(user_router)
 
 
 async def main():
-    # dp.update.middleware(DataBaseSession(session_pool=session_maker))
+    dp.update.middleware(DatabaseMiddleware(session_pool=session_maker))
     default = DefaultBotProperties(parse_mode=ParseMode.HTML)
     bot = Bot(token=token, default=default)
-    bot.my_admins_list = []
+    async with session_maker() as session:
+        bot.my_admins_list = await get_admins(session)
     await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats())
     await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
     await bot.delete_webhook(drop_pending_updates=True)
