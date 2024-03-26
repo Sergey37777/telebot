@@ -16,8 +16,19 @@ class Product(Base):
     price: Mapped[float] = mapped_column(Float(asdecimal=True), nullable=False)
     image: Mapped[str] = mapped_column(String(150), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
 
     user: Mapped['User'] = relationship(backref='product')
+    category: Mapped['Category'] = relationship(backref='product')
+
+
+class Category(Base):
+    __tablename__ = 'category'
+
+    id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
+    name: Mapped[str] = mapped_column(String(70), nullable=False, unique=True)
+
+
 
 
 class User(Base):
