@@ -46,3 +46,30 @@ async def orm_get_categories(session: AsyncSession):
     categories = await session.execute(stmt)
     categories = categories.scalars().all()
     return categories
+
+
+async def orm_delete_product(session: AsyncSession, product_id: int):
+    stmt = select(Product).where(Product.id == product_id)
+    product = await session.execute(stmt)
+    product = product.scalars().first()
+    await session.delete(product)
+    await session.commit()
+
+
+async def orm_get_product(session: AsyncSession, product_id: int):
+    stmt = select(Product).where(Product.id == product_id)
+    product = await session.execute(stmt)
+    product = product.scalars().first()
+    return product
+
+
+async def org_update_product(session: AsyncSession, product_id: int, data: Dict):
+    stmt = select(Product).where(Product.id == product_id)
+    product = await session.execute(stmt)
+    product = product.scalars().first()
+    product.name = data['name']
+    product.description = data['description']
+    product.price = data['price']
+    product.image = data['image']
+    product.category_id = data['category_id']
+    await session.commit()
