@@ -19,7 +19,7 @@ class Product(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
 
     user: Mapped['User'] = relationship(backref='product')
-    category: Mapped['Category'] = relationship(backref='product')
+    category: Mapped['Category'] = relationship(backref='product', lazy='joined')
 
 
 class Category(Base):
