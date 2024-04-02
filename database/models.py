@@ -29,8 +29,6 @@ class Category(Base):
     name: Mapped[str] = mapped_column(String(70), nullable=False, unique=True)
 
 
-
-
 class User(Base):
     __tablename__ = 'user'
 
@@ -38,3 +36,13 @@ class User(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     last_name: Mapped[str] = mapped_column(String(50), nullable=True)
+
+
+class Banner(Base):
+    __tablename__ = 'banner'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    image: Mapped[str] = mapped_column(String(150), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
+
+    user: Mapped['User'] = relationship(backref='banner')
