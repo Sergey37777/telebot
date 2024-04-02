@@ -6,7 +6,7 @@ from aiogram.filters import Command, StateFilter, or_f
 from aiogram.utils.formatting import Text, Bold
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_queries import orm_add_product, orm_add_category, orm_get_products, orm_get_categories, \
-    orm_delete_product, orm_get_product, org_update_product
+    orm_delete_product, orm_get_product, org_update_product, orm_add_banner
 from filters.ChatTypeFilter import ChatTypeFilter
 from filters.admin_filter import AdminFilter
 from kbds.reply import get_admin_keyboard
@@ -39,8 +39,12 @@ class AddCategory(StatesGroup):
     name = State()
 
 
+class AddBanner(StatesGroup):
+    image = State()
+
+
 ADMIN_KB = get_admin_keyboard('Добавить товар',
-                              'Изменить товар',
+                              'Добавить баннер',
                               'Добавить категорию',
                               'Посмотреть товары',
                               requests_contact=None,
@@ -178,3 +182,19 @@ async def change_product_callback(query: CallbackQuery, session: AsyncSession, s
     await state.set_state(AddProduct.name)
     await query.message.answer(AddProduct.texts['name'], reply_markup=ReplyKeyboardRemove())
     await query.answer()
+
+
+@admin_router.message(StateFilter('*'), F.text == 'Добавить баннер')
+async def add_banner(message: Message, state: FSMContext):
+    await state.set_state(AddBanner.image)
+    await message.answer('Загрузите фото баннера', reply_markup=ReplyKeyboardRemove())
+
+
+@admin_router.message(StateFilter(AddBanner.image), F.photo)
+async def add_banner_image(message: Message, state: FSMContext, session: AsyncSession):
+    await state.update_data(image=message.photo[-1].file_id)
+    data = await state.get_data()
+    data['user_id'] = message.from_user.id
+    await orm_add_banner(session, data)
+    await state.clear()
+    await message.answer('Баннер добавлен', reply_markup=ADMIN_KB)
