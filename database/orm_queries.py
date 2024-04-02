@@ -1,7 +1,7 @@
 from typing import Dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import Product, User, Category
+from database.models import Product, User, Category, Banner
 
 
 async def orm_add_product(session: AsyncSession, data: Dict):
@@ -72,4 +72,13 @@ async def org_update_product(session: AsyncSession, product_id: int, data: Dict)
     product.price = data['price']
     product.image = data['image']
     product.category_id = data['category_id']
+    await session.commit()
+
+
+async def orm_add_banner(session: AsyncSession, data: Dict):
+    obj = Banner(
+        image=data['image'],
+        user_id=data['user_id']
+    )
+    session.add(obj)
     await session.commit()
