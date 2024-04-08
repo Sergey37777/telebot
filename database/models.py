@@ -43,6 +43,8 @@ class Banner(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     image: Mapped[str] = mapped_column(String(150), nullable=False)
+    name: Mapped[str] = mapped_column(String(30), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
 
     user: Mapped['User'] = relationship(backref='banner')
