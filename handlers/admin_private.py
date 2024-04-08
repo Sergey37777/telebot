@@ -89,6 +89,8 @@ async def add_product_name(message: Message, state: FSMContext):
 async def add_product_description(message: Message, state: FSMContext):
     if AddProduct.product_for_change and message.text == '.':
         await state.update_data(description=AddProduct.product_for_change.description)
+        await state.set_state(AddProduct.price)
+        await message.answer(AddProduct.texts['price'])
     else:
         await state.update_data(description=message.text)
         await state.set_state(AddProduct.price)
