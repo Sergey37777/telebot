@@ -4,14 +4,13 @@ import logging
 import sys
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
 from database.orm_queries import get_admins
 from handlers.admin_private import admin_router
 from handlers.user_group import group_router
 from handlers.user_private import user_router
 from common.bot_commands import private
 from config import token
-from database.engine import async_session as session_maker
+from database.engine import async_session as session_maker, create_db
 from middlewares.db import DatabaseMiddleware
 
 dp = Dispatcher()
@@ -21,7 +20,18 @@ dp.include_router(user_router)
 # ALLOWED_UPDATES = ['message', 'edited_message', 'callback_query']
 
 
+async def on_startup(bot):
+    # await drop_db()
+    await create_db()
+
+
+async def on_shutdown(bot):
+    print('бот лег')
+
+
 async def main():
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
     dp.update.middleware(DatabaseMiddleware(session_pool=session_maker))
     default = DefaultBotProperties(parse_mode=ParseMode.HTML)
     bot = Bot(token=token, default=default)
