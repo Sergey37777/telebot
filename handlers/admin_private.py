@@ -6,7 +6,7 @@ from aiogram.filters import Command, StateFilter, or_f
 from aiogram.utils.formatting import Text, Bold
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_queries import orm_add_product, orm_add_category, orm_get_products, orm_get_categories, \
-    orm_delete_product, orm_get_product, org_update_product, orm_add_banner
+    orm_delete_product, orm_get_product, org_update_product, orm_add_banner, orm_get_info_pages
 from filters.ChatTypeFilter import ChatTypeFilter
 from filters.admin_filter import AdminFilter
 from kbds.reply import get_admin_keyboard
@@ -163,20 +163,18 @@ async def show_products(message: Message, session: AsyncSession):
             content = Text(Bold(product.name) +
                            f'\n{product.description}\n{Decimal(product.price)}\n{product.category.name}').as_html()
             await message.answer_photo(photo=product.image, caption=content,
-                                       reply_markup=get_callback_buttons('Изменить', 'Удалить',
-                                                                         product_id=str(product.id)),
-                                       )
-    else:
-        await message.answer('Товаров нет')
+                                       reply_markup=get_callback_buttons(buttons={'Изменить': f'update_{product.id}',
+                                                                                  'Удалить': f'delete_{product.id}'}))
+    await message.answer('Товаров нет')
 
 
-@admin_router.callback_query(F.data.startswith('Удалить_'))
+@admin_router.callback_query(F.data.startswith('delete_'))
 async def delete_callback(query: CallbackQuery, session: AsyncSession):
     await orm_delete_product(session=session, product_id=int(query.data.split('_')[-1]))
     await query.answer('Товар удален', reply_markup=ADMIN_KB)
 
 
-@admin_router.callback_query(F.data.startswith('Изменить_'))
+@admin_router.callback_query(F.data.startswith('update_'))
 async def change_product_callback(query: CallbackQuery, session: AsyncSession, state: FSMContext):
     product_id = int(query.data.split('_')[-1])
     product = await orm_get_product(session, product_id)
@@ -187,9 +185,11 @@ async def change_product_callback(query: CallbackQuery, session: AsyncSession, s
 
 
 @admin_router.message(StateFilter('*'), F.text == 'Добавить баннер')
-async def add_banner(message: Message, state: FSMContext):
+async def add_banner(message: Message, state: FSMContext, session: AsyncSession):
+    pages_names = [page.name for page in await orm_get_info_pages(session)]
+    await message.answer(f"Отправьте фото баннера.\nВ описании укажите для какой страницы:\
+                             \n{', '.join(pages_names)}")
     await state.set_state(AddBanner.image)
-    await message.answer('Загрузите фото баннера', reply_markup=ReplyKeyboardRemove())
 
 
 @admin_router.message(StateFilter(AddBanner.image), F.photo)
