@@ -1,5 +1,5 @@
 from typing import Dict
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Product, User, Category, Banner
@@ -116,5 +116,11 @@ async def orm_get_banners(session: AsyncSession):
 
 async def orm_update_banner(session: AsyncSession, banner_id: int, data: Dict):
     stmt = update(Banner).where(Banner.id == banner_id).values(**data).returning()
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def orm_delete_banner(session: AsyncSession, banner_id: int):
+    stmt = delete(Banner).where(Banner.id == banner_id)
     await session.execute(stmt)
     await session.commit()

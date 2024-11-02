@@ -9,7 +9,7 @@ from aiogram.utils.formatting import Text, Bold
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.orm_queries import orm_add_product, orm_add_category, orm_get_products, orm_get_categories, \
     orm_delete_product, orm_get_product, org_update_product, orm_add_banner, orm_get_info_pages, orm_get_banners, \
-    orm_update_banner, orm_get_banner_by_id
+    orm_update_banner, orm_get_banner_by_id, orm_delete_banner
 from filters.ChatTypeFilter import ChatTypeFilter
 from filters.admin_filter import AdminFilter
 from kbds.reply import get_admin_keyboard, get_cancel_keyboard
