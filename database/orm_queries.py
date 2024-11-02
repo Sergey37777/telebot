@@ -1,6 +1,7 @@
 from typing import Dict
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from database.models import Product, User, Category, Banner
 
 
@@ -25,8 +26,12 @@ async def orm_add_category(session: AsyncSession, data: Dict):
     await session.commit()
 
 
-async def orm_get_products(session: AsyncSession):
-    query = select(Product)
+async def orm_get_products(session: AsyncSession, category_id: int | None = None):
+    if category_id is None:
+        query = select(Product)
+        result = await session.execute(query)
+        return result.scalars().all()
+    query = select(Product).where(Product.category_id == category_id)
     result = await session.execute(query)
     return result.scalars().all()
 
@@ -78,7 +83,38 @@ async def org_update_product(session: AsyncSession, product_id: int, data: Dict)
 async def orm_add_banner(session: AsyncSession, data: Dict):
     obj = Banner(
         image=data['image'],
-        user_id=data['user_id']
+        user_id=data['user_id'],
+        name=data['name'],
+        description=data['description']
     )
     session.add(obj)
+    await session.commit()
+
+
+async def orm_get_info_pages(session: AsyncSession):
+    stmt = select(Banner)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def orm_get_banner(session: AsyncSession, menu_name: str):
+    stmt = select(Banner).where(Banner.name == menu_name)
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+
+async def orm_get_banner_by_id(session: AsyncSession, id: int):
+    stmt = select(Banner).where(Banner.id == id)
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+
+async def orm_get_banners(session: AsyncSession):
+    stmt = select(Banner)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+async def orm_update_banner(session: AsyncSession, banner_id: int, data: Dict):
+    stmt = update(Banner).where(Banner.id == banner_id).values(**data).returning()
+    await session.execute(stmt)
     await session.commit()
