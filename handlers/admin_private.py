@@ -78,6 +78,11 @@ async def add_product_cancel(message: Message, state: FSMContext):
         AddBanner.banner_for_change = None
         await state.clear()
         await message.answer('Вы отменили изменение товара', reply_markup=ADMIN_KB)
+    elif AddBanner.banner_for_change:
+        AddProduct.product_for_change = None
+        AddBanner.banner_for_change = None
+        await state.clear()
+        await message.answer('Вы отменили изменение баннера', reply_markup=ADMIN_KB)
     else:
         await message.answer('Вы отменили добавление товара', reply_markup=ADMIN_KB)
         await state.clear()
@@ -208,7 +213,8 @@ async def admin_callback(query: CallbackQuery, callback_data: AdminCallBack, ses
         banner = await orm_get_banner_by_id(session, callback_data.banner_id)
         AddBanner.banner_for_change = banner
         await state.set_state(AddBanner.image)
-        await query.message.answer('Отправьте новое фото баннера, в описании укажите для какой странице или введите точку, что-бы пропустить')
+        await query.message.answer('Отправьте новое фото баннера, в описании укажите для какой странице '
+                                   'или введите точку, что-бы пропустить', reply_markup=CANCEL_KB)
         await query.answer()
     else:
         await query.answer()
@@ -234,7 +240,7 @@ async def change_product_callback(query: CallbackQuery, session: AsyncSession, s
 async def add_banner(message: Message, state: FSMContext, session: AsyncSession):
     pages_names = [page.name for page in await orm_get_info_pages(session)]
     await message.answer(f"Отправьте фото баннера.\nВ описании укажите для какой страницы:\
-                             \n{', '.join(pages_names)}", reply_markup=ReplyKeyboardRemove())
+                             \n{', '.join(pages_names)}", reply_markup=CANCEL_KB)
     await state.set_state(AddBanner.image)
 
 
