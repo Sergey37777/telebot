@@ -20,6 +20,7 @@ class Product(Base):
 
     user: Mapped['User'] = relationship(backref='product')
     category: Mapped['Category'] = relationship(backref='product', lazy='joined')
+    cart: Mapped['Cart'] = relationship('Cart', back_populates='product')
 
 
 class Category(Base):
@@ -37,6 +38,8 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     last_name: Mapped[str] = mapped_column(String(50), nullable=True)
 
+    cart: Mapped['Cart'] = relationship('Cart', back_populates='user')
+
 
 class Banner(Base):
     __tablename__ = 'banner'
@@ -48,3 +51,16 @@ class Banner(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
 
     user: Mapped['User'] = relationship(backref='banner')
+
+
+class Cart(Base):
+    __tablename__ = 'cart'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
+    product_id: Mapped[int] = mapped_column(ForeignKey('product.id', ondelete='CASCADE'), nullable=False)
+    quantity: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+    user: Mapped['User'] = relationship('User', back_populates='cart')
+    product: Mapped['Product'] = relationship('Product', back_populates='cart')
+
