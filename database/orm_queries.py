@@ -1,8 +1,9 @@
 from typing import Dict
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
-from database.models import Product, User, Category, Banner
+from database.models import Product, User, Category, Banner, Cart
 
 
 async def orm_add_product(session: AsyncSession, data: Dict):
@@ -124,3 +125,41 @@ async def orm_delete_banner(session: AsyncSession, banner_id: int):
     stmt = delete(Banner).where(Banner.id == banner_id)
     await session.execute(stmt)
     await session.commit()
+
+
+async def orm_delete_from_cart(session: AsyncSession, user_id: int, product_id: int):
+    stmt = delete(Cart).where(Cart.user_id == user_id, Cart.product_id == product_id)
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def orm_reduce_product_in_cart(session: AsyncSession, user_id: int, product_id: int):
+    stmt = select(Cart).where(Cart.user_id == user_id, Cart.product_id == product_id)
+    cart = await session.execute(stmt)
+    cart = cart.scalars().first()
+    if cart.quantity == 1:
+        await orm_delete_from_cart(session, user_id, product_id)
+        return False
+    cart.quantity -= 1
+    await session.commit()
+    return True
+
+
+async def orm_add_to_cart(session: AsyncSession, user_id: int, product_id: int):
+    stmt = select(Cart).where(Cart.user_id == user_id, Cart.product_id == product_id)
+    cart = await session.execute(stmt)
+    cart = cart.scalars().first()
+    if cart:
+        cart.quantity += 1
+        await session.commit()
+        return
+    cart = Cart(user_id=user_id, product_id=product_id, quantity=1)
+    session.add(cart)
+    await session.commit()
+
+
+async def orm_get_user_carts(session: AsyncSession, user_id: int):
+    stmt = select(Cart).where(Cart.user_id == user_id).options(joinedload(Cart.product))
+    carts = await session.execute(stmt)
+    carts = carts.scalars().all()
+    return carts
