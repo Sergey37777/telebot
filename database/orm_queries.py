@@ -163,3 +163,16 @@ async def orm_get_user_carts(session: AsyncSession, user_id: int):
     carts = await session.execute(stmt)
     carts = carts.scalars().all()
     return carts
+
+
+async def orm_add_user(session: AsyncSession, user_id: int, first_name: str, last_name: str):
+    user = User(user_id=user_id, first_name=first_name, last_name=last_name)
+    session.add(user)
+    await session.commit()
+
+
+async def orm_check_user(session: AsyncSession, user_id: int):
+    stmt = select(User).where(User.user_id == user_id)
+    user = await session.execute(stmt)
+    user = user.scalars().first()
+    return user
