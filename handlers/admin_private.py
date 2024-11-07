@@ -84,7 +84,7 @@ async def add_product_cancel(message: Message, state: FSMContext):
         await state.clear()
         await message.answer('Вы отменили изменение баннера', reply_markup=ADMIN_KB)
     else:
-        await message.answer('Вы отменили добавление товара', reply_markup=ADMIN_KB)
+        await message.answer('Действие отменено', reply_markup=ADMIN_KB)
         await state.clear()
 
 
