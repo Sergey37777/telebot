@@ -23,6 +23,8 @@ dp.include_router(user_router)
 async def on_startup(bot):
     # await drop_db()
     await create_db()
+    async with session_maker() as session:
+        bot.my_admins_list = await get_admins(session)
 
 
 async def on_shutdown(bot):
@@ -35,8 +37,6 @@ async def main():
     dp.update.middleware(DatabaseMiddleware(session_pool=session_maker))
     default = DefaultBotProperties(parse_mode=ParseMode.HTML)
     bot = Bot(token=token, default=default)
-    async with session_maker() as session:
-        bot.my_admins_list = await get_admins(session)
     await bot.delete_my_commands(scope=types.BotCommandScopeAllPrivateChats())
     await bot.set_my_commands(commands=private, scope=types.BotCommandScopeAllPrivateChats())
     await bot.delete_webhook(drop_pending_updates=True)
