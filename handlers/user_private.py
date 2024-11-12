@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from database.orm_queries import orm_add_user, orm_add_to_cart, orm_check_user
+from config import ADMIN_TOKEN
+from database.orm_queries import orm_add_user, orm_add_to_cart, orm_check_user, orm_generate_admin_token, \
+    orm_become_admin, get_admins
 from filters.ChatTypeFilter import ChatTypeFilter
 from handlers.menu_processing import get_menu_content
 from kbds.inline import get_customer_keyboard, get_callback_buttons, MenuCallBack
@@ -20,6 +21,25 @@ async def start(message: Message, session: AsyncSession):
     # print(message.from_user.id)
     media, reply_markup = await get_menu_content(session, level=0, menu_name='main')
     await message.answer_photo(media.media, caption=media.caption, reply_markup=reply_markup)
+
+
+@user_router.message(Command('generate_admin_token'))
+async def generate_admin_token(message: Message, session: AsyncSession):
+    token = message.text.split()[-1]
+    if token == ADMIN_TOKEN:
+        await orm_generate_admin_token(session)
+        await message.answer('Токен сгенерирован')
+
+
+@user_router.message(Command('become_admin'))
+async def become_admin(message: Message, session: AsyncSession, bot):
+    token = message.text.split()[-1]
+    if await orm_become_admin(session, message.from_user.id, token):
+        await message.answer('Вы стали админом')
+        bot.my_admins_list = await get_admins(session)
+    else:
+        await message.answer('Неверный токен')
+
 
 
 """@user_router.callback_query(F.data.startswith('some_'))
