@@ -64,3 +64,9 @@ class Cart(Base):
     user: Mapped['User'] = relationship('User', back_populates='cart')
     product: Mapped['Product'] = relationship('Product', back_populates='cart')
 
+
+class Token(Base):
+    __tablename__ = 'token'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    token: Mapped[str] = mapped_column(String(32), nullable=False)
