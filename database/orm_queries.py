@@ -2,8 +2,8 @@ from typing import Dict
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-
-from database.models import Product, User, Category, Banner, Cart
+from utils.token_generator import generate_token
+from database.models import Product, User, Category, Banner, Cart, Token
 
 
 async def orm_add_product(session: AsyncSession, data: Dict):
@@ -17,6 +17,26 @@ async def orm_add_product(session: AsyncSession, data: Dict):
     )
     session.add(obj)
     await session.commit()
+
+
+async def orm_generate_admin_token(session: AsyncSession):
+    token = generate_token(length=32)
+    obj = Token(token=token)
+    session.add(obj)
+    await session.commit()
+
+
+async def orm_become_admin(session: AsyncSession, user_id: int, token: str):
+    stmt = select(Token).where(Token.token == token)
+    token = await session.execute(stmt)
+    token = token.scalars().first()
+    if token:
+        obj = User(user_id=user_id)
+        session.add(obj)
+        await session.commit()
+        return True
+    return False
+
 
 
 async def orm_add_category(session: AsyncSession, data: Dict):
